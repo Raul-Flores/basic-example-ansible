@@ -1,0 +1,38 @@
+---
+- name: First Playbook send basic commands to device IOS-XE Devnet Sandbox
+  hosts: devnet_sandbox
+  gather_facts: false
+  connection: network_cli
+
+  tasks:
+  - name: Send show ip int brief command to Devnet IOS-XE Sandbox
+    ios_command:
+      commands:
+        - show ip interface brief
+    register: config
+
+  - name: Output show ip int brief
+    debug:
+      var: config.stdout
+
+  - name: save output to local file for backup.
+    copy: 
+       content: "{{ config.stdout_lines }}"
+       dest: ./show_run_{{ inventory_hostname }}.txt
+
+- name: Second  PLAYBOOK Configure hostname and DNS
+  hosts: devnet_sandbox
+  connection: network_cli
+  gather_facts: no
+  vars:
+    dns: "4.4.4.4"
+
+  tasks:
+   - name: Configure hostname with inventory name
+     ios_config:
+       lines: hostname {{ inventory_hostname }}
+
+   - name: Configure DNS
+     ios_config:
+       lines: ip name-server {{dns}}
+...
